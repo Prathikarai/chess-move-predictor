@@ -1,0 +1,54 @@
+:root {
+  --bg: #0f1116;
+  --panel: #141822;
+  --text: #e6e8ee;
+  --muted: #9aa3b2;
+  --primary: #4da3ff;
+  --accent: #7cf29a;
+  --square-dark: #769656;
+  --square-light: #eeeed2;
+  --lastmove: #cdd26a;  /* highlight color */
+  --sel-outline: #00bcd4;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); }
+
+.landing-header, .game-header {
+  display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: var(--panel); border-bottom: 1px solid #1f2430;
+}
+.landing-header h1, .game-header h1 { margin: 0; font-weight: 700; }
+
+.btn {
+  display: inline-block; padding: 10px 16px; border-radius: 12px; border: 1px solid #2a3140; color: var(--text); background: #1a2030; cursor: pointer; text-decoration: none;
+}
+.btn.primary { background: linear-gradient(135deg, var(--primary), #7aa8ff); color: #05121f; font-weight: 700; }
+.btn:hover { filter: brightness(1.1); }
+
+.game-main { display: grid; grid-template-columns: 1fr 360px; gap: 20px; padding: 16px; }
+.left-panel { background: var(--panel); border-radius: 16px; padding: 16px; }
+.right-panel { background: var(--panel); border-radius: 16px; padding: 16px; }
+
+.board {
+  width: min(80vw, 520px); aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(8, 1fr); border-radius: 12px; overflow: hidden; border: 2px solid #2b3344;
+}
+.square { display: grid; place-items: center; font-size: calc( min(80vw, 520px) / 10 ); user-select: none; cursor: pointer; }
+.square.light { background: var(--square-light); color: #111; }
+.square.dark { background: var(--square-dark); color: #fff; }
+
+.square.highlight { background-color: var(--lastmove) !important; }
+.square.selected { outline: 3px solid var(--sel-outline); outline-offset: -3px; z-index: 1; }
+
+.controls, .toggles { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+.status { margin-top: 12px; color: var(--muted); }
+
+.moves { max-height: 240px; overflow: auto; background: #0e1320; border: 1px solid #232a3a; border-radius: 8px; padding: 8px 12px; }
+.line { min-height: 48px; background: #0e1320; border: 1px solid #232a3a; border-radius: 8px; padding: 8px 12px; color: var(--muted); }
+
+.captured-wrap { display: grid; gap: 8px; margin-bottom: 8px; }
+.captured { display: inline-block; min-height: 24px; font-size: 18px; }
+
+@media (max-width: 900px) {
+  .game-main { grid-template-columns: 1fr; }
+}

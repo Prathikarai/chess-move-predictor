@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Play – Smart Chess Predictor</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="game-body">
+  <header class="game-header">
+    <h1>Smart Chess Predictor</h1>
+    <a class="btn" href="{{ url_for('index') }}">Home</a>
+  </header>
+
+  <main class="game-main">
+    <div class="left-panel">
+      <div id="board" class="board"></div>
+
+      <div class="controls">
+        <button id="startBtn" class="btn primary">Start Game</button>
+        <button id="resetBtn" class="btn">Reset</button>
+        <button id="flipBtn" class="btn">Flip Board</button>
+        <button id="undoBtn" class="btn">Undo</button>
+      </div>
+
+      <div class="toggles">
+        <label><input type="checkbox" id="aiEnabled" checked/> AI plays Black</label>
+        <label><input type="checkbox" id="onlineMode" checked/> Online (Stockfish)</label>
+        <label><input type="checkbox" id="localMode"/> Use Local Model</label>
+      </div>
+
+      <div class="status">
+        <p id="status-text">White to move</p>
+        <p id="eval-text">Eval: —</p>
+      </div>
+    </div>
+
+    <aside class="right-panel">
+      <h2>Captured</h2>
+      <div class="captured-wrap">
+        <div><strong>White:</strong> <span id="whiteCaptured" class="captured"></span></div>
+        <div><strong>Black:</strong> <span id="blackCaptured" class="captured"></span></div>
+      </div>
+
+      <h2>Moves</h2>
+      <ol id="moveList" class="moves"></ol>
+
+      <h2>Suggested Line</h2>
+      <div id="lineBox" class="line"></div>
+
+      <h2>Depth</h2>
+      <input id="depthInput" type="number" min="8" max="22" value="12"/>
+    </aside>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/chess_core.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/chessboard_ui.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
