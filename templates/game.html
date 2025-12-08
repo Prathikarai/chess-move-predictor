@@ -1,61 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Play – Smart Chess Predictor</title>
-  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Chess Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body class="game-body">
-  <header class="game-header">
-    <h1>Smart Chess Predictor</h1>
-    <a class="btn" href="{{ url_for('index') }}">Home</a>
-  </header>
 
-  <main class="game-main">
-    <div class="left-panel">
-      <div id="board" class="board"></div>
+<!-- ================= HEADER ================= -->
+<header class="header-bar">
+    <div class="header-title">Smart Chess Predictor</div>
 
-      <div class="controls">
+    <div class="header-right">
         <button id="startBtn" class="btn primary">Start Game</button>
         <button id="resetBtn" class="btn">Reset</button>
         <button id="flipBtn" class="btn">Flip Board</button>
         <button id="undoBtn" class="btn">Undo</button>
-      </div>
 
-      <div class="toggles">
-        <label><input type="checkbox" id="aiEnabled" checked/> AI plays Black</label>
-        <label><input type="checkbox" id="onlineMode" checked/> Online (Stockfish)</label>
-        <label><input type="checkbox" id="localMode"/> Use Local Model</label>
-      </div>
-
-      <div class="status">
-        <p id="status-text">White to move</p>
-        <p id="eval-text">Eval: —</p>
-      </div>
+        <a class="btn home-btn" href="{{ url_for('index') }}">Home</a>
     </div>
+</header>
 
-    <aside class="right-panel">
-      <h2>Captured</h2>
-      <div class="captured-wrap">
-        <div><strong>White:</strong> <span id="whiteCaptured" class="captured"></span></div>
-        <div><strong>Black:</strong> <span id="blackCaptured" class="captured"></span></div>
-      </div>
+<div class="layout">
 
-      <h2>Moves</h2>
-      <ol id="moveList" class="moves"></ol>
+    <!-- ================= SIDEBAR WITH STRATEGY PANEL ================= -->
+    <aside class="sidebar" style="width:230px; background:#111418; padding:20px;">
 
-      <h2>Suggested Line</h2>
-      <div id="lineBox" class="line"></div>
+        <div class="logo">♟ SmartChess</div>
 
-      <h2>Depth</h2>
-      <input id="depthInput" type="number" min="8" max="22" value="12"/>
+        <nav class="menu">
+            <a href="{{ url_for('index') }}"><span>🏠</span> Home</a>
+            <a href="{{ url_for('game') }}"><span>⚡</span> Play</a>
+            <a href="{{ url_for('puzzles') }}"><span>🧩</span> Puzzles</a>
+
+            <!-- ⭐ STRATEGY PANEL ADDED HERE -->
+            <div class="strategy-panel">
+                <span style="margin-left: 10px; font-size:15px;">♞ Strategy Panel</span>
+
+                <div class="tags" style="padding-left:25px; margin-top:6px;">
+                    <button id="attackBtn" class="tag attack">Attack</button>
+                    <button id="defendBtn" class="tag defend">Defend</button>
+                </div>
+            </div>
+
+            <a href="{{ url_for('feedback_page') }}"><span>💬</span> Feedback</a>
+        </nav>
     </aside>
-  </main>
 
-  <script src="{{ url_for('static', filename='js/chess_core.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/chessboard_ui.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- ================= MAIN GAME AREA ================= -->
+    <main class="game-main">
+
+        <div class="left-panel">
+
+            <div class="board-coord-wrapper">
+
+                <div class="coords-col">
+                    <span>8</span><span>7</span><span>6</span><span>5</span>
+                    <span>4</span><span>3</span><span>2</span><span>1</span>
+                </div>
+
+                <div class="board-wrapper">
+                    <div id="board" class="board"></div>
+                </div>
+            </div>
+
+            <div class="coords-row">
+                <span>A</span><span>B</span><span>C</span><span>D</span>
+                <span>E</span><span>F</span><span>G</span><span>H</span>
+            </div>
+
+            <div class="status">
+                <p id="status-text">White to move</p>
+                <p id="eval-text">Eval: —</p>
+            </div>
+
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <aside class="right-panel">
+            <h2>Captured</h2>
+            <p><strong>White:</strong> <span id="whiteCaptured"></span></p>
+            <p><strong>Black:</strong> <span id="blackCaptured"></span></p>
+
+            <h2>Moves</h2>
+            <ol id="moveList" class="moves"></ol>
+
+            <h2>Suggested Line</h2>
+            <div id="lineBox" class="line"></div>
+
+            <h2>Best Move</h2>
+            <div id="bestMoveBox" class="line">
+                <p id="bestMoveText">—</p>
+                <small id="bestMoveWhy" style="color:#8fa3c9;"></small>
+            </div>
+
+            <h2>Depth</h2>
+            <input id="depthInput" type="number" min="8" max="22" value="12">
+
+            <h2>Engine Settings</h2>
+            <div class="engine-panel">
+                <label><input type="checkbox" id="aiEnabled" checked> AI plays Black</label>
+                <label><input type="checkbox" id="onlineMode" checked> Online (Stockfish)</label>
+                <label><input type="checkbox" id="localMode"> Use Local Model</label>
+            </div>
+
+        </aside>
+
+    </main>
+</div>
+
+<!-- JS -->
+<script src="{{ url_for('static', filename='js/chess_core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chessboard_ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
 </body>
 </html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Feedback • SmartChess</title>
+
+    <style>
+        body {
+            background: #0d1117;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 25px;
+            color: #58a6ff;
+        }
+
+        table {
+            width: 90%;
+            margin: 30px auto;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #30363d;
+        }
+
+        th {
+            background: #161b22;
+            color: #c9d1d9;
+        }
+
+        tr:nth-child(even) {
+            background: #1a1f27;
+        }
+
+        tr:nth-child(odd) {
+            background: #11161d;
+        }
+
+        td {
+            color: #d0d7de;
+        }
+
+        .no-data {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 18px;
+            color: #9da5b4;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>All User Feedback 💬</h1>
+
+{% if feedback|length == 0 %}
+    <p class="no-data">No feedback submitted yet.</p>
+{% else %}
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Rating</th>
+        <th>Improvement Suggestion</th>
+        <th>Additional Suggestions</th>
+    </tr>
+
+    {% for f in feedback %}
+    <tr>
+        <td>{{ f.name }}</td>
+        <td>{{ f.rating }}</td>
+        <td>{{ f.improvement }}</td>
+        <td>{{ f.suggestions }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Feedback • SmartChess</title>
+
+    <style>
+        body {
+            background: #0d1117;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 480px;
+            background: #161b22;
+            margin: 60px auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px #000;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #58a6ff;
+        }
+
+        label {
+            font-size: 14px;
+            margin-top: 10px;
+            display: block;
+            color: #c9d1d9;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-top: 6px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: white;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: none;
+            height: 90px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #238636;
+            border: none;
+            margin-top: 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            color: white;
+        }
+
+        button:hover {
+            background: #2ea043;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>We Value Your Feedback 💬</h2>
+
+    <form action="/submit_feedback" method="POST">
+
+        <label>Your Name (optional)</label>
+        <input type="text" name="name">
+
+        <label>Rate Your Experience</label>
+        <select name="rating" required>
+            <option value="">Select a rating</option>
+            <option>Excellent</option>
+            <option>Good</option>
+            <option>Average</option>
+            <option>Poor</option>
+        </select>
+
+        <label>What should we improve?</label>
+        <textarea name="improvement" required></textarea>
+
+        <label>Any suggestions?</label>
+        <textarea name="suggestions"></textarea>
+
+        <button type="submit">Submit Feedback</button>
+    </form>
+</div>
+
+</body>
+</html>
