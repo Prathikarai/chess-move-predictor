@@ -35,7 +35,7 @@
             <a href="{{ url_for('game') }}"><span>⚡</span> Play</a>
             <a href="{{ url_for('puzzles') }}"><span>🧩</span> Puzzles</a>
 
-            <!-- ⭐ STRATEGY PANEL ADDED HERE -->
+            <!-- STRATEGY PANEL -->
             <div class="strategy-panel">
                 <span style="margin-left: 10px; font-size:15px;">♞ Strategy Panel</span>
 
@@ -54,6 +54,13 @@
 
         <div class="left-panel">
 
+            <!-- ================= BLACK TIMER (TOP) ================= -->
+            <div id="blackTimerContainer"
+                 style="display:flex; justify-content:center; width:600px;
+                        margin:10px auto; color:white; font-size:24px; font-weight:bold;">
+                Black Time: <span id="blackTimer">30:00</span>
+            </div>
+
             <div class="board-coord-wrapper">
 
                 <div class="coords-col">
@@ -71,6 +78,13 @@
                 <span>E</span><span>F</span><span>G</span><span>H</span>
             </div>
 
+            <!-- ================= WHITE TIMER (BOTTOM) ================= -->
+            <div id="whiteTimerContainer"
+                 style="display:flex; justify-content:center; width:600px;
+                        margin:10px auto; color:white; font-size:24px; font-weight:bold;">
+                White Time: <span id="whiteTimer">30:00</span>
+            </div>
+
             <div class="status">
                 <p id="status-text">White to move</p>
                 <p id="eval-text">Eval: —</p>
@@ -78,35 +92,45 @@
 
         </div>
 
-        <!-- RIGHT PANEL -->
-        <aside class="right-panel">
-            <h2>Captured</h2>
-            <p><strong>White:</strong> <span id="whiteCaptured"></span></p>
-            <p><strong>Black:</strong> <span id="blackCaptured"></span></p>
-
-            <h2>Moves</h2>
-            <ol id="moveList" class="moves"></ol>
-
-            <h2>Suggested Line</h2>
-            <div id="lineBox" class="line"></div>
-
-            <h2>Best Move</h2>
-            <div id="bestMoveBox" class="line">
-                <p id="bestMoveText">—</p>
-                <small id="bestMoveWhy" style="color:#8fa3c9;"></small>
+        <!-- ================= RIGHT SIDE PANELS ================= -->
+        <div style="display: flex; flex-direction: column;">
+            
+            <!-- ⭐ BEST MOVE PANEL - SEPARATE AT TOP -->
+            <div class="best-move-panel">
+                <h2>Best Move</h2>
+                <div class="best-move-display">
+                    <div class="best-move-notation" id="bestMoveText">—</div>
+                </div>
+                <div class="best-move-explanation">
+                    <strong>Why this move?</strong>
+                    <span id="bestMoveWhy">Waiting for analysis...</span>
+                </div>
             </div>
 
-            <h2>Depth</h2>
-            <input id="depthInput" type="number" min="8" max="22" value="12">
+            <!-- OTHER GAME INFO PANEL -->
+            <aside class="right-panel">
+                <h2>Captured</h2>
+                <p><strong>White:</strong> <span id="whiteCaptured">—</span></p>
+                <p><strong>Black:</strong> <span id="blackCaptured">—</span></p>
 
-            <h2>Engine Settings</h2>
-            <div class="engine-panel">
-                <label><input type="checkbox" id="aiEnabled" checked> AI plays Black</label>
-                <label><input type="checkbox" id="onlineMode" checked> Online (Stockfish)</label>
-                <label><input type="checkbox" id="localMode"> Use Local Model</label>
-            </div>
+                <h2>Moves</h2>
+                <ol id="moveList" class="moves"></ol>
 
-        </aside>
+                <h2>Suggested Line</h2>
+                <div id="lineBox" class="line">—</div>
+
+                <h2>Depth</h2>
+                <input id="depthInput" type="number" min="8" max="22" value="12">
+
+                <h2>Engine Settings</h2>
+                <div class="engine-panel">
+                    <label><input type="checkbox" id="aiEnabled" checked> AI plays Black</label>
+                    <label><input type="checkbox" id="onlineMode" checked> Online (Stockfish)</label>
+                    <label><input type="checkbox" id="localMode"> Use Local Model</label>
+                </div>
+            </aside>
+
+        </div>
 
     </main>
 </div>

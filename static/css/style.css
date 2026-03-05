@@ -1,6 +1,6 @@
 /* =========================================================
    Smart Chess Predictor - Landing + Game (Chess.com Board)
-   Single merged style.css
+   Complete CSS with Best Move Panel at Top
    ========================================================= */
 
 /* ---------------------------
@@ -142,7 +142,7 @@ body {
 }
 
 /* =========================================================
-   ⭐ STRATEGY PANEL (ADDED HERE)
+   STRATEGY PANEL
 ========================================================= */
 
 .strategy-panel {
@@ -405,58 +405,129 @@ body {
   justify-content: center;
 }
 
-/* Right Panel */
+/* =========================================================
+   ⭐ BEST MOVE PANEL - SEPARATE AT TOP
+========================================================= */
+
+.best-move-panel {
+  width: 350px;
+  background: linear-gradient(135deg, #1a4d2e 0%, #1f5f3a 100%);
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #2ea043;
+  box-shadow: 0 6px 16px rgba(46, 160, 67, 0.25);
+  margin-bottom: 20px;
+}
+
+.best-move-panel h2 {
+  color: #6bbf4e;
+  font-size: 17px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.best-move-panel h2::before {
+  content: "⚡";
+  font-size: 20px;
+}
+
+.best-move-display {
+  background: rgba(0, 0, 0, 0.35);
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.best-move-notation {
+  font-size: 36px;
+  font-weight: 700;
+  color: #6bbf4e;
+  text-align: center;
+  letter-spacing: 3px;
+  text-shadow: 0 3px 10px rgba(107, 191, 78, 0.5);
+  font-family: 'Courier New', monospace;
+}
+
+.best-move-explanation {
+  font-size: 13px;
+  color: #b8d4a8;
+  line-height: 1.7;
+}
+
+.best-move-explanation strong {
+  color: #e8f5e8;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* =========================================================
+   RIGHT PANEL - OTHER SECTIONS
+========================================================= */
+
 .game-body .right-panel {
-  width: 280px;
+  width: 350px;
   background: var(--panel);
   padding: 24px;
   border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .game-body .right-panel h2 {
-  margin-bottom: 10px;
-  font-size: 18px;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #9aa3b2;
+  font-weight: 600;
 }
 
 .game-body .moves {
   max-height: 300px;
   overflow-y: auto;
   margin-left: 20px;
+  font-size: 14px;
 }
 
 .game-body .line {
   background: #1a1d25;
-  padding: 10px;
+  padding: 12px;
   border-radius: 8px;
   min-height: 42px;
+  font-size: 14px;
+  color: #d0d4d8;
 }
 
 .game-body #depthInput {
   width: 80px;
-  padding: 6px;
+  padding: 8px;
   background: #1a1d25;
   border: 1px solid #2b3038;
   border-radius: 6px;
   color: #fff;
+  font-size: 14px;
 }
 
 /* Engine panel */
 .engine-panel {
   background: #1a1d25;
-  padding: 12px;
+  padding: 14px;
   border-radius: 8px;
-  margin-top: 12px;
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  font-size: 15px;
+  gap: 10px;
+  font-size: 14px;
 }
 
 .engine-panel label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
+  color: #d0d4d8;
 }
 
 /* Status */
@@ -466,7 +537,10 @@ body {
   color: var(--muted);
 }
 
-/* BOARD */
+/* =========================================================
+   BOARD STYLES
+========================================================= */
+
 .game-body .board {
   width: min(800px, 90vw);
   aspect-ratio: 1/1;
@@ -545,35 +619,16 @@ body {
   color: #d0d4d8;
 }
 
-/* BEST MOVE PANEL */
-#bestMoveBox {
-  background: #1a1d25;
-  padding: 12px;
-  border-radius: 8px;
-  min-height: 50px;
-  margin-top: 10px;
-  font-size: 15px;
-}
-
-#bestMoveText {
-  font-size: 18px;
-  font-weight: bold;
-  color: #6bbf4e;
-}
-
-#bestMoveWhy {
-  margin-top: 6px;
-  font-size: 13px;
-}
-
 /* Responsive */
 @media (max-width: 900px) {
   .game-body .game-main {
     flex-direction: column;
     align-items: center;
   }
-  .game-body .right-panel {
+  .game-body .right-panel,
+  .best-move-panel {
     width: 100%;
+    max-width: 600px;
   }
 }
 
@@ -638,9 +693,8 @@ body {
   100% { box-shadow: inset 0 0 0 0 transparent; }
 }
 
-
 /* =========================================================
-   ⭐ NEW — STRATEGY TIP BOX (STEP-2)
+   STRATEGY TIP BOX
 ========================================================= */
 
 .strategy-tip-box {

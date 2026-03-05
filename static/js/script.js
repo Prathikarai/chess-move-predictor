@@ -59,33 +59,105 @@ document.addEventListener('DOMContentLoaded', () => {
   const bestMoveWhy  = document.getElementById('bestMoveWhy');
 
   let gameOver = false;
-  let lastTurnSide = null; // for white/black move voice
+  let lastTurnSide = null;
 
-  /* ---------------------------------------------------------
-     STATUS & CAPTURED
-  ------------------------------------------------------------*/
+  // ============================================
+  // CLOCK
+  // ============================================
+  let whiteTime = 30 * 60;
+  let blackTime = 30 * 60;
+  let activePlayer = null;
+  let timerInterval = null;
+  let clockRunning = false;
+
+  const whiteTimerEl = document.getElementById("whiteTimer");
+  const blackTimerEl = document.getElementById("blackTimer");
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function updateClockDisplay() {
+    if (whiteTimerEl) whiteTimerEl.textContent = formatTime(whiteTime);
+    if (blackTimerEl) blackTimerEl.textContent = formatTime(blackTime);
+  }
+
+  function stopClock() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    clockRunning = false;
+  }
+
+  function startClock(player) {
+    if (gameOver) return;
+    stopClock();
+    activePlayer = player;
+    clockRunning = true;
+
+    updateClockDisplay();
+
+    timerInterval = setInterval(() => {
+      if (!clockRunning || gameOver) {
+        stopClock();
+        return;
+      }
+
+      if (activePlayer === "white") {
+        whiteTime--;
+        if (whiteTime <= 0) {
+          whiteTime = 0;
+          updateClockDisplay();
+          handleTimeout("White");
+          return;
+        }
+      } else {
+        blackTime--;
+        if (blackTime <= 0) {
+          blackTime = 0;
+          updateClockDisplay();
+          handleTimeout("Black");
+          return;
+        }
+      }
+      updateClockDisplay();
+    }, 1000);
+  }
+
+  function handleTimeout(loser) {
+    stopClock();
+    gameOver = true;
+    alert(`${(loser === "White") ? "Black" : "White"} wins on time!`);
+  }
+
+  function resetClock() {
+    stopClock();
+    whiteTime = 30 * 60;
+    blackTime = 30 * 60;
+    activePlayer = null;
+    clockRunning = false;
+    updateClockDisplay();
+  }
+
+  updateClockDisplay();
+
+  // ============================================
+  // STATUS + CAPTURES
+  // ============================================
   function speakTurnIfChanged() {
     if (gameOver) return;
-    const side = game.turn(); // 'w' or 'b'
+    const side = game.turn();
     if (side === lastTurnSide) return;
     lastTurnSide = side;
-
-    if (side === 'w') {
-      playVoice(voiceWhiteMove);
-    } else {
-      playVoice(voiceBlackMove);
-    }
+    playVoice(side === 'w' ? voiceWhiteMove : voiceBlackMove);
   }
 
   function updateStatus() {
-    if (gameOver) {
-      statusEl.textContent = 'Game Over';
-      return;
-    }
-    statusEl.textContent =
-      (game.turn() === 'w') ? 'White to move' : 'Black to move';
-
-    // 🔊 Announce side to move when it changes
+    if (gameOver) return statusEl.textContent = 'Game Over';
+    statusEl.textContent = (game.turn() === 'w') ? 'White to move' : 'Black to move';
     speakTurnIfChanged();
   }
 
@@ -114,10 +186,9 @@ document.addEventListener('DOMContentLoaded', () => {
     blackCaptured.textContent = whiteCaps.map(p => sym[p]).join(' ');
   }
 
-  /* ---------------------------------------------------------
-     CHECK + CHECKMATE + STALEMATE
-  ------------------------------------------------------------*/
-
+  // ============================================
+  // CHECKMATE + STALEMATE (unchanged)
+  // ============================================
   function findKing(color) {
     const king = (color === 'w') ? 'K' : 'k';
     for (let i = 0; i < 8; i++)
@@ -179,46 +250,37 @@ document.addEventListener('DOMContentLoaded', () => {
   function kingInCheck(color) {
     const king = findKing(color);
     if (!king) return false;
-
     const [kx, ky] = king;
-    const enemy = (color === 'w') ? 'b' : 'w';
-    return squareAttacked(kx, ky, enemy);
+    return squareAttacked(kx, ky, color === 'w' ? 'b' : 'w');
   }
 
   function checkCheckmate() {
     const whiteKingAlive = game.board.some(r => r.includes('K'));
     const blackKingAlive = game.board.some(r => r.includes('k'));
-
     if (!whiteKingAlive || !blackKingAlive) {
-      // 🔊 Checkmate voice
       playVoice(voiceCheckmate);
       alert('Checkmate! Game Over.');
       gameOver = true;
+      stopClock();
       return true;
     }
     return false;
   }
 
-  // Simple stalemate detector:
-  // Side to move has NO legal moves and is NOT in check.
   function hasAnyLegalMove(color) {
     const originalTurn = game.turnColor;
     game.turnColor = color;
 
     let canMove = false;
-    for (let r = 0; r < 8 && !canMove; r++) {
-      for (let c = 0; c < 8 && !canMove; c++) {
+    for (let r=0; r<8 && !canMove; r++)
+      for (let c=0; c<8 && !canMove; c++) {
         const p = game.board[r][c];
         if (!p) continue;
         const isWhite = (p === p.toUpperCase());
         if ((color === 'w' && !isWhite) || (color === 'b' && isWhite)) continue;
-
-        const moves = game.movesFrom(r, c);
-        if (moves.length > 0) {
-          canMove = true;
-        }
+        const moves = game.movesFrom(r,c);
+        if (moves.length > 0) canMove = true;
       }
-    }
 
     game.turnColor = originalTurn;
     return canMove;
@@ -226,22 +288,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function checkStalemate() {
     if (gameOver) return false;
-
-    const side = game.turn(); // side to move
-    if (kingInCheck(side)) return false; // if in check, not stalemate
-
+    const side = game.turn();
+    if (kingInCheck(side)) return false;
     if (!hasAnyLegalMove(side)) {
       playVoice(voiceStalemate);
       alert('Stalemate! Game over.');
       gameOver = true;
+      stopClock();
       return true;
     }
     return false;
   }
 
-  /* ---------------------------------------------------------
-     BEST MOVE PANEL
-  ------------------------------------------------------------*/
+  // ============================================
+  // BEST MOVE PANEL (unchanged)
+  // ============================================
   async function updateBestMovePanel() {
     try {
       const fen = game.toFEN();
@@ -254,14 +315,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const data = await response.json();
-
       if (data.error) {
         bestMoveText.textContent = 'Error';
         bestMoveWhy.textContent = '';
         return;
       }
 
-      const best = data.bestmove || '—';
+      const best = data.bestmove || data.best_move || data.move || '—';
       const line = (data.continuation || []).join(' ');
 
       bestMoveText.textContent = best;
@@ -274,9 +334,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /* ---------------------------------------------------------
-     AI MOVE HELPERS
-  ------------------------------------------------------------*/
+  // ============================================
+  // AI MOVE HELPERS — UPDATED PART HERE👇
+  // ============================================
   async function aiMoveOnline() {
     if (gameOver) return;
 
@@ -299,7 +359,9 @@ document.addEventListener('DOMContentLoaded', () => {
       evalEl.textContent = 'Eval: ' + (data.evaluation ?? '—');
       lineBox.textContent = (data.continuation || []).join(' ');
 
-      const best = data.bestmove;
+      // 🔥 FIXED: online Stockfish field compatibility
+      const best = data.bestmove || data.best_move || data.move;
+
       if (best && best.length === 4) {
         const fromAlg = best.slice(0,2);
         const toAlg   = best.slice(2,4);
@@ -312,10 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
           board.lastMove = { from, to };
           board.render();
 
-          // 🔊 AI move voice
           playVoice(voiceAIMove);
-
-          // AI move triggers move-made event
           board.triggerMoveEvent(from, to);
         }
       }
@@ -355,9 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
           board.lastMove = { from, to };
           board.render();
 
-          // 🔊 AI move voice
           playVoice(voiceAIMove);
-
           board.triggerMoveEvent(from, to);
         }
       }
@@ -368,41 +425,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function aiMoveOffline() {
     if (gameOver) return;
-
     const ok = game.aiMoveGreedy();
     if (ok) {
       board.render();
-
-      // 🔊 AI move voice
       playVoice(voiceAIMove);
-
       board.triggerMoveEvent(null, null);
     }
   }
 
-  /* ---------------------------------------------------------
-     WHO PLAYS? (AI as Black)
-  ------------------------------------------------------------*/
+  // ============================================
+  // AI as Black
+  // ============================================
   async function maybeAIMove() {
     if (gameOver) return;
     if (game.turn() !== 'b') return;
 
-    if (onlineMode.checked) {
-      return await aiMoveOnline();
-    }
-
-    if (localMode.checked) {
-      return await aiMoveLocal();
-    }
-
-    if (aiEnabled.checked) {
-      return await aiMoveOffline();
-    }
+    if (onlineMode.checked) return await aiMoveOnline();
+    if (localMode.checked)  return await aiMoveLocal();
+    if (aiEnabled.checked)  return await aiMoveOffline();
   }
 
-  /* ---------------------------------------------------------
-     MAIN MOVE EVENT
-  ------------------------------------------------------------*/
+  // ============================================
+  // MAIN MOVE EVENT
+  // ============================================
   document.addEventListener('move-made', async () => {
     if (gameOver) return;
 
@@ -410,30 +455,21 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCaptured();
     updateStatus();
 
-    const sideToDefend = game.turn();
+    const nextSide = game.turn();
+    startClock(nextSide === 'w' ? "white" : "black");
 
-    // 🔊 SOUND + ALERT FOR CHECK
-    if (kingInCheck(sideToDefend)) {
+    const defendSide = game.turn();
+    if (kingInCheck(defendSide)) {
       playCheckSound();
-      alert('Check! Protect your King!');
+      alert("Check! Protect your King!");
     }
 
-    // Checkmate?
-    if (checkCheckmate()) {
-      updateStatus();
-      return;
-    }
-
-    // Stalemate?
-    if (checkStalemate()) {
-      updateStatus();
-      return;
-    }
+    if (checkCheckmate()) return updateStatus();
+    if (checkStalemate()) return updateStatus();
 
     await updateBestMovePanel();
     await maybeAIMove();
 
-    // Log move
     const last = game.history[game.history.length - 1];
     if (last) {
       try {
@@ -450,13 +486,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  /* ---------------------------------------------------------
-     BUTTONS & TOGGLES
-  ------------------------------------------------------------*/
+  // ============================================
+  // BUTTONS
+  // ============================================
   function resetAll() {
     game.reset();
     gameOver = false;
-    lastTurnSide = null; // reset turn voice tracking
+    lastTurnSide = null;
     board.lastMove = null;
     board.render();
     moveList.innerHTML = '';
@@ -470,13 +506,22 @@ document.addEventListener('DOMContentLoaded', () => {
     updateBestMovePanel();
   }
 
-  startBtn.addEventListener('click', resetAll);
-  resetBtn.addEventListener('click', resetAll);
+  startBtn.addEventListener('click', () => {
+    resetAll();
+    resetClock();
+    activePlayer = "white";
+    startClock("white");
+    statusEl.textContent = "White to move";
+  });
+
+  resetBtn.addEventListener('click', () => {
+    resetAll();
+    resetClock();
+  });
 
   undoBtn.addEventListener('click', () => {
-    if (gameOver) return;
-    if (game.history.length === 0) return;
-
+    if (gameOver || game.history.length === 0) return;
+    stopClock();
     const last = game.history.pop();
     const { from, to, piece, captured } = last;
 
@@ -495,52 +540,37 @@ document.addEventListener('DOMContentLoaded', () => {
   flipBtn.addEventListener('click', () => board.flip());
 
   aiEnabled.addEventListener('change', async () => {
-    if (aiEnabled.checked) {
-      await maybeAIMove();
-    }
+    if (aiEnabled.checked) await maybeAIMove();
   });
 
-  /* ---------------------------------------------------------
-     INITIAL RENDER
-  ------------------------------------------------------------*/
+  // ============================================
+  // INITIAL
+  // ============================================
   updateStatus();
   updateBestMovePanel();
 
-  /* ==========================================================
-     ⭐ STRATEGY PANEL SIMPLE LOGIC (Attack + Defend)
-  ========================================================== */
-
-  // Helper to convert [row,col] to algebraic like "e4"
-  function toAlg(row, col) {
-    return MiniChess.toAlg(row, col);
-  }
-
-  function isWhitePiece(p) {
-    return p && p === p.toUpperCase();
-  }
-
-  function isBlackPiece(p) {
-    return p && p === p.toLowerCase();
-  }
+  // ============================================
+  // ⭐ STRATEGY PANEL SIMPLE LOGIC (unchanged)
+  // ============================================
+  function toAlg(row, col) { return MiniChess.toAlg(row, col); }
+  function isWhitePiece(p) { return p && p === p.toUpperCase(); }
+  function isBlackPiece(p) { return p && p === p.toLowerCase(); }
 
   function highlightSquare(squareAlg) {
     const el = document.querySelector(`.square-${squareAlg}`);
     if (el) el.classList.add("highlight-square");
   }
-
   function clearHighlights() {
     document.querySelectorAll(".highlight-square").forEach(el =>
       el.classList.remove("highlight-square")
     );
   }
 
-  // Find a simple capturing move for the side to move
   function findSimpleAttackMove() {
     const boardArr = game.board;
-    const side = game.turn(); // 'w' or 'b'
-
-    for (let r = 0; r < 8; r++) {
-      for (let c = 0; c < 8; c++) {
+    const side = game.turn();
+    for (let r=0; r<8; r++)
+      for (let c=0; c<8; c++) {
         const p = boardArr[r][c];
         if (!p) continue;
 
@@ -549,69 +579,52 @@ document.addEventListener('DOMContentLoaded', () => {
           (side === 'b' && isBlackPiece(p));
         if (!isOwn) continue;
 
-        const moves = game.movesFrom(r, c) || [];
+        const moves = game.movesFrom(r,c) || [];
         for (const mv of moves) {
-          const [nr, nc] = mv;
+          const [nr,nc] = mv;
           const target = boardArr[nr][nc];
           if (!target) continue;
 
           const isEnemy =
             (side === 'w' && isBlackPiece(target)) ||
             (side === 'b' && isWhitePiece(target));
-
           if (isEnemy) {
-            return {
-              fromAlg: toAlg(r, c),
-              toAlg: toAlg(nr, nc)
-            };
+            return { fromAlg: toAlg(r,c), toAlg: toAlg(nr,nc) };
           }
         }
       }
-    }
     return null;
   }
 
-  // Find a simple threatened square (friendly piece that can be captured)
   function findSimpleThreatenedSquare() {
     const boardArr = game.board;
-    const side = game.turn();           // side we want to defend
+    const side = game.turn();
     const enemySide = side === 'w' ? 'b' : 'w';
 
-    const isSidePiece = (p) =>
-      p &&
-      ((side === 'w' && isWhitePiece(p)) ||
-       (side === 'b' && isBlackPiece(p)));
+    const isSidePiece = (p)=>
+      p && ((side==='w' && isWhitePiece(p))||(side==='b'&&isBlackPiece(p)));
+    const isEnemyPiece = (p)=>
+      p && ((enemySide==='w' && isWhitePiece(p))||(enemySide==='b'&&isBlackPiece(p)));
 
-    const isEnemyPiece = (p) =>
-      p &&
-      ((enemySide === 'w' && isWhitePiece(p)) ||
-       (enemySide === 'b' && isBlackPiece(p)));
-
-    for (let r = 0; r < 8; r++) {
-      for (let c = 0; c < 8; c++) {
+    for (let r=0; r<8; r++)
+      for (let c=0; c<8; c++) {
         const p = boardArr[r][c];
         if (!isEnemyPiece(p)) continue;
 
-        const moves = game.movesFrom(r, c) || [];
+        const moves = game.movesFrom(r,c) || [];
         for (const mv of moves) {
-          const [nr, nc] = mv;
+          const [nr,nc] = mv;
           const target = boardArr[nr][nc];
-          if (target && isSidePiece(target)) {
-            // friendly piece that can be captured
-            return toAlg(nr, nc);
-          }
+          if (target && isSidePiece(target)) return toAlg(nr,nc);
         }
       }
-    }
     return null;
   }
 
-  // ATTACK BUTTON
   const attackBtn = document.getElementById("attackBtn");
   if (attackBtn) {
     attackBtn.addEventListener("click", () => {
       clearHighlights();
-
       const move = findSimpleAttackMove();
       if (move) {
         highlightSquare(move.toAlg);
@@ -622,12 +635,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // DEFEND BUTTON
   const defendBtn = document.getElementById("defendBtn");
   if (defendBtn) {
     defendBtn.addEventListener("click", () => {
       clearHighlights();
-
       const threatenedSquare = findSimpleThreatenedSquare();
       if (threatenedSquare) {
         highlightSquare(threatenedSquare);

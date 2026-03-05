@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartChess – Puzzles</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     
     <style>
         * {
@@ -174,6 +173,47 @@
             margin: 0 auto;
         }
 
+        /* Chessboard styles */
+        .chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            width: 100%;
+            aspect-ratio: 1;
+            border: 3px solid #3d3a36;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .square {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+
+        .square.light {
+            background-color: #eeeed2;
+        }
+
+        .square.dark {
+            background-color: #769656;
+        }
+
+        .square.selected {
+            background-color: #baca44 !important;
+        }
+
+        .square.last-move {
+            background-color: #cdd26a !important;
+        }
+
+        .square:hover {
+            opacity: 0.8;
+        }
+
         /* Controls */
         .puzzle-controls {
             display: flex;
@@ -326,6 +366,10 @@
                 padding: 12px 24px;
                 font-size: 14px;
             }
+
+            .square {
+                font-size: 32px;
+            }
         }
     </style>
 </head>
@@ -336,9 +380,9 @@
     <div class="puzzle-header">
         <div class="logo">♟ SmartChess</div>
         <div class="nav-links">
-            <a href="{{ url_for('index') }}">🏠 Home</a>
-            <a href="{{ url_for('game') }}">⚡ Play</a>
-            <a href="{{ url_for('puzzles') }}" style="color: #81b64c;">🧩 Puzzles</a>
+            <a href="/">🏠 Home</a>
+            <a href="/game">⚡ Play</a>
+            <a href="/puzzles" style="color: #81b64c;">🧩 Puzzles</a>
         </div>
     </div>
 
@@ -372,7 +416,7 @@
             <!-- Board -->
             <div class="board-wrapper">
                 <div class="board-container">
-                    <div id="puzzleBoard" class="board"></div>
+                    <div id="puzzleBoard"></div>
                 </div>
             </div>
 
@@ -406,16 +450,151 @@
         </div>
     </div>
 
-    <!-- JS -->
-    <script src="{{ url_for('static', filename='js/chess_core.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/chessboard_ui.js') }}"></script>
-
     <script>
+        // Simple Chess Game Logic
+        class MiniChess {
+            constructor() {
+                this.board = [];
+                this.turnColor = 'w';
+                this.initBoard();
+            }
+
+            initBoard() {
+                const setup = [
+                    ['r','n','b','q','k','b','n','r'],
+                    ['p','p','p','p','p','p','p','p'],
+                    [null,null,null,null,null,null,null,null],
+                    [null,null,null,null,null,null,null,null],
+                    [null,null,null,null,null,null,null,null],
+                    [null,null,null,null,null,null,null,null],
+                    ['P','P','P','P','P','P','P','P'],
+                    ['R','N','B','Q','K','B','N','R']
+                ];
+                this.board = setup.map(row => [...row]);
+            }
+
+            isWhite(piece) {
+                return piece && piece === piece.toUpperCase();
+            }
+
+            isBlack(piece) {
+                return piece && piece === piece.toLowerCase();
+            }
+
+            moveRC(r1, c1, r2, c2) {
+                const piece = this.board[r1][c1];
+                if (!piece) return false;
+                
+                this.board[r2][c2] = piece;
+                this.board[r1][c1] = null;
+                this.turnColor = this.turnColor === 'w' ? 'b' : 'w';
+                return true;
+            }
+
+            movesFrom(r, c) {
+                // Simplified - return empty for now
+                return [];
+            }
+
+            static toAlg(r, c) {
+                return String.fromCharCode(97 + c) + (8 - r);
+            }
+
+            static fromAlg(alg) {
+                const col = alg.charCodeAt(0) - 97;
+                const row = 8 - parseInt(alg[1]);
+                return [row, col];
+            }
+        }
+
+        // Simple Chessboard UI
+        class ChessboardUI {
+            constructor(elementId, game) {
+                this.elementId = elementId;
+                this.game = game;
+                this.selected = null;
+                this.lastMove = null;
+                this.onClick = null;
+                this.render();
+            }
+
+            render() {
+                const container = document.getElementById(this.elementId);
+                const board = document.createElement('div');
+                board.className = 'chessboard';
+
+                const pieces = {
+                    'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+                    'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
+                };
+
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        const square = document.createElement('div');
+                        square.className = 'square';
+                        square.classList.add((r + c) % 2 === 0 ? 'light' : 'dark');
+                        
+                        const alg = MiniChess.toAlg(r, c);
+                        square.classList.add(`square-${alg}`);
+
+                        if (this.selected && this.selected[0] === r && this.selected[1] === c) {
+                            square.classList.add('selected');
+                        }
+
+                        if (this.lastMove && 
+                            ((this.lastMove.from[0] === r && this.lastMove.from[1] === c) ||
+                             (this.lastMove.to[0] === r && this.lastMove.to[1] === c))) {
+                            square.classList.add('last-move');
+                        }
+
+                        const piece = this.game.board[r][c];
+                        if (piece) {
+                            square.textContent = pieces[piece] || piece;
+                        }
+
+                        square.addEventListener('click', () => {
+                            if (this.onClick) {
+                                this.onClick(r, c);
+                            }
+                        });
+
+                        board.appendChild(square);
+                    }
+                }
+
+                container.innerHTML = '';
+                container.appendChild(board);
+            }
+        }
+
+        // Puzzle data - Add sample puzzles here as fallback
+        const SAMPLE_PUZZLES = [
+            {
+                fen: "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 0 1",
+                solution: ["h5f7", "e8f7", "d1d5"],
+                rating: 1400,
+                themes: ["Fork", "Sacrifice"]
+            },
+            {
+                fen: "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1",
+                solution: ["f3f7", "e8f7", "c4e6"],
+                rating: 1200,
+                themes: ["Scholar's Mate", "Quick Mate"]
+            },
+            {
+                fen: "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq - 0 1",
+                solution: ["d8h4", "e1e2", "h4e4"],
+                rating: 1000,
+                themes: ["Fool's Mate", "Quick Checkmate"]
+            }
+        ];
+
         let game = null;
         let board = null;
         let currentPuzzle = null;
         let moveIndex = 0;
         let solutionMoves = [];
+        let currentPuzzleIndex = 0;
 
         function setFENPosition(fen) {
             const parts = fen.split(' ');
@@ -443,7 +622,6 @@
             
             game.turnColor = turn;
             
-            // Update turn indicator
             const turnSquare = document.getElementById('turnSquare');
             const turnText = document.getElementById('turnText');
             if (turn === 'w') {
@@ -460,23 +638,35 @@
                 document.getElementById('loadingMsg').style.display = 'block';
                 document.getElementById('puzzleContent').style.display = 'none';
 
-                const response = await fetch('/api/puzzle');
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.error);
+                let puzzleData = null;
+
+                // Try to fetch from API first
+                try {
+                    const response = await fetch('/api/puzzle');
+                    if (response.ok) {
+                        puzzleData = await response.json();
+                        if (puzzleData.error) {
+                            throw new Error(puzzleData.error);
+                        }
+                    }
+                } catch (apiError) {
+                    console.log('API unavailable, using sample puzzles:', apiError);
                 }
 
-                currentPuzzle = data.puzzle || data;
+                // Fallback to sample puzzles if API fails
+                if (!puzzleData || !puzzleData.fen) {
+                    puzzleData = SAMPLE_PUZZLES[currentPuzzleIndex % SAMPLE_PUZZLES.length];
+                    console.log('Using sample puzzle:', currentPuzzleIndex);
+                }
+
+                currentPuzzle = puzzleData;
                 moveIndex = 0;
                 
-                // Get initial FEN
                 const initialFen = currentPuzzle.fen || "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
                 solutionMoves = currentPuzzle.solution || [];
                 
                 setFENPosition(initialFen);
                 
-                // Update UI
                 const rating = currentPuzzle.rating || 1500;
                 document.getElementById('puzzleRating').textContent = rating;
                 
@@ -499,6 +689,7 @@
                 console.error('Failed to load puzzle:', error);
                 document.getElementById('loadingMsg').textContent = 
                     'Failed to load puzzle. Click "Next Puzzle" to try again.';
+                document.getElementById('puzzleContent').style.display = 'block';
             }
         }
 
@@ -543,6 +734,7 @@
         }
 
         function nextPuzzle() {
+            currentPuzzleIndex++;
             loadPuzzle();
         }
 
@@ -628,19 +820,9 @@
                         board.render();
                         return;
                     } else {
-                        const moveWouldWork = game.movesFrom(sr, sc).some(([rr, cc]) => rr === r && cc === c);
-                        
-                        if (moveWouldWork) {
-                            setStatus("❌ Incorrect move! Try again.", "error");
-                            board.selected = null;
-                            board.render();
-                            return;
-                        }
-                        
-                        if (piece) {
-                            board.selected = [r, c];
-                            board.render();
-                        }
+                        setStatus("❌ Incorrect move! Try again.", "error");
+                        board.selected = null;
+                        board.render();
                         return;
                     }
                 }
